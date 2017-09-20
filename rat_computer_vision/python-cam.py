@@ -14,6 +14,10 @@ def get_hsv_masks(color='red'):
                 [np.array([160, 80, 0], np.uint8), 
                  np.array([180, 255, 255], np.uint8)]]
 
+    if color == 'orange':
+        return [[np.array([10, 150, 0], np.uint8), 
+                 np.array([30, 235, 255], np.uint8)]]
+    
     if color == 'green':
         return [[np.array([40, 100, 0], np.uint8), 
                  np.array([80, 255, 255], np.uint8)]]
@@ -63,7 +67,7 @@ def process_frame(cam, min_perimeter, show_picture=True, clear_noise=True):
     hsv_img = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
     rodeo_circles = detect_colored_objects(hsv_img, min_perimeter, 
-                                           clear_noise, color='red')
+                                           clear_noise, color='orange')
     obstacle_circles = detect_colored_objects(hsv_img, min_perimeter, 
                                               clear_noise, color='green')
 
@@ -86,11 +90,29 @@ def process_frame(cam, min_perimeter, show_picture=True, clear_noise=True):
 def make_decision(rodeo_circles, obstacle_circles):
     # Assume that we have two rodeo circles
     
-    if len(rodeo_circles) < 2 or len(obstacle_circles) < 1:
+    if len(rodeo_circles) < 3 or len(obstacle_circles) < 1:
         return 'c'
     
-    rodeo_center = 0.5 * (rodeo_circles[0][0] + rodeo_circles[1][0]).reshape((2, 1))
-    rodeo_direction = rodeo_circles[0][0] - rodeo_circles[1][0]
+    rodeo_center = (rodeo_circles[0][0] + rodeo_circles[1][0] + \
+                    rodeo_circles[2][0]).reshape((2, 1)) / 3
+    
+    rodeo_distances = np.zeros(3)
+    
+    rodeo_distances[0] = np.sum(rodeo_circles[0][0] - rodeo_circles[1][0]) ** 2
+    rodeo_distances[1] = np.sum(rodeo_circles[1][0] - rodeo_circles[2][0]) ** 2
+    rodeo_distances[2] = np.sum(rodeo_circles[2][0] - rodeo_circles[0][0]) ** 2
+    
+    ind = np.argmin(rodeo_distances)
+    
+    if ind == 0:
+        rodeo_direction = rodeo_circles[2][0] - \
+            0.5 * (rodeo_circles[0][0] + rodeo_circles[1][0])
+    elif ind == 1:
+        rodeo_direction = rodeo_circles[0][0] - \
+            0.5 * (rodeo_circles[1][0] + rodeo_circles[2][0])
+    else:
+        rodeo_direction = rodeo_circles[1][0] - \
+            0.5 * (rodeo_circles[0][0] + rodeo_circles[2][0])
     
     circle_centers = np.zeros((2, len(obstacle_circles)))
     
@@ -138,12 +160,11 @@ def run_rodeo(max_time=1000, min_perimeter=15):
             break
         
         command = make_decision(rodeo_circles, obstacle_circles)
-        
-        ser = None
+
         send_decision(ser, command)
         
     cam.release()
     cv2.destroyAllWindows()
     
 if __name__ == '__main__':
-    run_rodeo(max_time=100, min_perimeter=30)
+    run_rodeo(max_time=1000, min_perimeter=30)
