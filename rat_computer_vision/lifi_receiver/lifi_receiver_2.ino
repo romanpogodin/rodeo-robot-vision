@@ -7,7 +7,7 @@ RF24 radio(2, 3);  // For Arduino Micro
 byte addresses[][6] = {"1Node", "2Node"};
 bool role = 0; // Local state variable that controls whether this node is sending 1 or receiving 0
 
-const int kDelay = 20;
+const int kDelay = 10;
 
 Servo myservoLeft;  // create servo object to control a servo
 Servo myservoRight;  // create servo object to control a servo
@@ -16,6 +16,7 @@ Servo myservoRight;  // create servo object to control a servo
 int leftSpeed = 0;    // variable to store the servo position
 int rightSpeed = 0;
 int go = 0;
+int subtractor = 0;
 
 void setup() {
   myservoLeft.attach(9);  // attaches the servo on pin 9 to the servo object
@@ -67,14 +68,16 @@ void loop() {
     digitalWrite(12, HIGH);
     digitalWrite(10, LOW);
     go = 0;
+    subtractor = 0;
     Serial.println("STOP");
-  } else if (received_signal == 1) {
+  } else if ( received_signal == 1) {
       Serial.println("Forward");
       leftSpeed = 180;
       rightSpeed = 0;
       digitalWrite(12, LOW);
       digitalWrite(10, HIGH);
       go = 1;
+      subtractor = 0;
    } else if (received_signal == 2) {
       Serial.println("Backward");
       leftSpeed = 0;
@@ -82,20 +85,23 @@ void loop() {
       digitalWrite(12, HIGH);
       digitalWrite(10, HIGH);
       go = 1;
-    } else if (received_signal == 3) {
+      subtractor = 1;
+    } else if (2 < received_signal < 6) {
       Serial.println("Turn Left");
       leftSpeed = 0;
       rightSpeed = 0;
       digitalWrite(12, LOW);
       digitalWrite(10, LOW);
       go = 1;
-    } else if (received_signal == 4) {
+      subtractor = 2;
+    } else if (5 < received_signal < 10) {
       Serial.println("Turn Right");
       rightSpeed = 180;
       leftSpeed = 180;
       digitalWrite(12, LOW);
       digitalWrite(10, LOW);
       go = 1;
+      subtractor = 5;
     } else {
       Serial.println("No Signal Received");
     }
@@ -104,5 +110,5 @@ void loop() {
 
   Serial.println("------------New round----------");
 
-  delay(kDelay);
+  delay(kDelay + (received_signal - subtractor) * 100);
 }
