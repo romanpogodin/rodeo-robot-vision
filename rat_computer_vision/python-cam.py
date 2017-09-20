@@ -129,14 +129,21 @@ def make_decision(rodeo_circles, obstacle_circles):
                       np.linalg.norm(rodeo_direction) / 
                       np.linalg.norm(circle_centers[:, closest_ind]))
     
-    if np.abs(angle - np.pi) > 0.8 * np.pi:
+    if np.abs(angle - np.pi) > 0.9 * np.pi:
         return 'w'
     else:
-        return 'a'
+        if np.array([rodeo_direction[1], -rodeo_direction[0]]).dot(
+                circle_centers[:, closest_ind]) > 0:
+            return 'a'
+        else:
+            return 'd'
 
 def send_decision(ser, command):
     # print("Sending %s" % command)
-    ser.write(bytes(command, 'utf-8'))
+    if type(command) == str:
+        ser.write(bytes(command, 'utf-8'))
+    elif type(command) == int:
+        ser.write(bytes([command]))
     
 def run_rodeo(max_time=1000, min_perimeter=15):
     # Connect to the transmitter
@@ -160,6 +167,19 @@ def run_rodeo(max_time=1000, min_perimeter=15):
             break
         
         command = make_decision(rodeo_circles, obstacle_circles)
+
+        # A temporary thing for flexible speed
+        
+        if command == 'w':
+            command = 1
+        elif command == 'c':
+            command = 0
+        elif command == 's':
+            command = 2
+        elif command == 'a':
+            command = 3
+        elif command == 'd':
+            command = 6
 
         send_decision(ser, command)
         
