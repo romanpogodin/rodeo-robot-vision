@@ -68,7 +68,7 @@ void loop() {
   if (Serial.available()) { // only send data back if data has been sent
     transmitted_signal = Serial.read();
     
-    if (start != 1 && transmitted_signal != old_signal) {
+    if (start != 1 && transmitted_signal == old_signal) {
       return;
     }
 
