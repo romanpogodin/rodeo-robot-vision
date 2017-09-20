@@ -36,95 +36,85 @@ void setup() {
   radio.setChannel(100);
 
   // Open a writing and reading pipe on each radio, with opposite addresses
-  if (radioNumber) {
-
-    radio.openWritingPipe(addresses[1]);
-    radio.openReadingPipe(1, addresses[0]);
-
-  } else {
-
-    radio.openWritingPipe(addresses[0]);
-    radio.openReadingPipe(1, addresses[1]);
-
-  }
+  radio.openWritingPipe(addresses[1]);
+  radio.openReadingPipe(1, addresses[0]);
 
   // Pause briefly to let everything "settle"
-
   delay(1000);
-  Serial.println(F("RF24/examples/GettingStarted"));
-  Serial.println(F("*** PRESS 'T' to begin transmitting to the other node"));
 
-  // Start the radio listening for data
-  radio.startListening();
+  // Stop the radio listening for data
+  radio.stopListening();      
+  radio.setPayloadSize(8);
+
+  if (!radio.write(0, sizeof(byte))) {
+    Serial.println("failed");
+  }
+  else {
+    Serial.println("sent");
+  }
+
 }
 
-unsigned long transmitted_signal;
+  byte transmitted_signal;
+  int start = 1;
+
 
 void loop() {
+    delay(100);
   /****************** Transmitting Role ***************************/
-  radio.stopListening();                                    // First, stop listening so we can talk.
+                              // First, stop listening so we can talk.
 
-  Serial.println(F("Now sending"));
+  
 
-  //if (!radio.write( &start_time, sizeof(unsigned long) )){
-  //  Serial.println(F("failed"));
-  char inByte = ' ';
+  char inByte = 'c';
   if (Serial.available()) { // only send data back if data has been sent
     char inByte = Serial.read();
     if (inByte == 'w') {
+       if (transmitted_signal == 1) {
+          return;
+      }
       transmitted_signal = 1; //forward
     } else if (inByte == 'a') {
+       if (transmitted_signal == 3) {
+         return;
+      }
       transmitted_signal = 3; //left
     } else if (inByte == 's') {
+       if (transmitted_signal == 2) {
+        return;
+      }
       transmitted_signal = 2; //back
     } else if (inByte == 'd') {
+        if (transmitted_signal == 4) {
+          return;
+      }
       transmitted_signal = 4; //right
     } else if (inByte == 'c') {
+        if (transmitted_signal == 0) {
+          return;
+      }
       transmitted_signal = 0;
     }
+  }  else if (start != 1) {
+    return;
   }
   Serial.println(transmitted_signal);
-
-  if (!radio.write(&transmitted_signal, sizeof(unsigned long))) {
-    Serial.println(F("failed"));
+  
+  radio.stopListening();  
+  Serial.println(F("Now sending"));
+  if (!radio.write(&transmitted_signal, sizeof(byte))) {
+    Serial.println("failed");
+  }
+  else {
+    Serial.println("sent");
   }
 
-//
-//  radio.startListening();                                    // Now, continue listening
-//  unsigned long started_waiting_at = micros();               // Set up a timeout period, get the current microseconds
-//  boolean timeout = false;                                   // Set up a variable to indicate if a response was received or not
-
-//  while (!radio.available()) {                            // While nothing is received
-//    if (micros() - started_waiting_at > 100000 ) {            // If waited longer than 200ms, indicate timeout and exit while loop
-//        timeout = true;
-//        break;
-//    }      
-//  }
-//
-//   
-//  if ( timeout ) {                                             // Describe the results
-//      Serial.println(F("Failed, response timed out."));
-//  } else {
-//      unsigned long got_time;                                 // Grab the response, compare, and send to debugging spew
-//      radio.read( &got_time, sizeof(unsigned long) );
-//      unsigned long end_time = micros();
-//
-//      // Send to serial port
-//      Serial.print(F("Sent "));
-//      Serial.print(start_time);
-//      Serial.print(F(", Got response "));
-//      Serial.print(got_time);
-//      Serial.print(F(", Round-trip delay "));
-//      Serial.print(end_time-start_time);
-//      Serial.println(F(" microseconds"));
-//  }
-
+  start = 0;
   // Try again 100 ms later
 
-  delay(10);
 
 
-} // End of Loop
-
+}
 
 // FIN
+
