@@ -92,6 +92,7 @@ class DeepRLNetwork:
         return
     
     def save_weights(self, filename):
+        self.model.save_weights(filename)
         return
     
     def update_weights(self):
@@ -144,7 +145,11 @@ def create_state(input_size):
 if __name__ == '__main__':
     input_size = 1000
     network = DeepRLNetwork()
-    network.init_network(input_size, 6, (1000, 100))
+    
+    load = ''
+    # load = 'robot_weights'
+    
+    network.init_network(input_size, 6, (1000, 100), load)
     reward = 0
     state = np.array([np.ones(input_size)])
     
@@ -157,6 +162,9 @@ if __name__ == '__main__':
             new_time = time.clock()
             print("Iter %d, time passed %f" % (curr_time, new_time - old_time))
             old_time = new_time
+            
+            if curr_time % 1000:
+                network.save_weights('robot_weights')
             
         # MAKE ACTION BASED ON PREVIOUS SOLUTION
         action = network.choose_action(state)
