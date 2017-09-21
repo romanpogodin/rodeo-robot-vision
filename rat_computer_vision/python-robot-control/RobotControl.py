@@ -16,12 +16,13 @@ def send_decision(ser, command):
         ser.write(bytes([command]))
     
     
-def run_rodeo(max_time=1000, min_perimeter=15):
+def run_rodeo(max_time=10000, min_perimeter=15):
     import imutils
-    Ser = False
+    Ser = True
     if Ser == True:
     # Connect to the transmitter
-        ser = serial.Serial('COM9', 9600)
+        cname = '/dev/cu.usbmodem14411'
+        ser = serial.Serial(cname, 9600)
     
     # Connect to a webcam
     cam = cv2.VideoCapture(0)
@@ -82,7 +83,7 @@ def run_rodeo(max_time=1000, min_perimeter=15):
                 send_decision(ser, instr[8])
             elif ang>190:
                 send_decision(ser, instr[9])
-        
+            sleep(0.2)
                
     cam.release()
     cv2.destroyAllWindows()
