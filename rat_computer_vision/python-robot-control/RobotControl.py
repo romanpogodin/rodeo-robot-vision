@@ -8,7 +8,6 @@ import imutils
 from ObjectRecognition import *
 from DecisionMaking import *
 
-
 def send_decision(ser, command):
     # print("Sending %s" % command)
     if type(command) == str:
@@ -16,10 +15,13 @@ def send_decision(ser, command):
     elif type(command) == int:
         ser.write(bytes([command]))
     
+    
 def run_rodeo(max_time=1000, min_perimeter=15):
     import imutils
+    Ser = False
+    if Ser == True:
     # Connect to the transmitter
-    #ser = serial.Serial('COM9', 9600)
+        ser = serial.Serial('COM9', 9600)
     
     # Connect to a webcam
     cam = cv2.VideoCapture(0)
@@ -32,19 +34,56 @@ def run_rodeo(max_time=1000, min_perimeter=15):
             print("Camera is not opened")
             break
         
-        ret, rodeo_circles, obstacle_circles, target_circles, image = \
+        ret, rodeo_circles, obstacle_circles, target_circles, image, mask_rl = \
             process_frame(cam, min_perimeter=min_perimeter)
         
         if ret:
             break
         
 
-        command, image2 = make_decision2(rodeo_circles, obstacle_circles, target_circles, image)
+        command, ang,tar_dist, image2 = make_decision2(rodeo_circles, obstacle_circles, target_circles, image)
 
         cv2.imshow('Frame', image2)
-
-#        send_decision(ser, command)
+        aT = [(-10, 10), (10, 35), (-35, -10),(35, 80), (-80, -35),(80, 150),(-150, -80),(150, 185),(-185, -150)]
+        instr = [1, 3, 6, 4, 7, 5, 8, 2, 0, 9]
         
+        if Ser == True:
+            if ang>aT[0][0] and ang<aT[0][1]:
+                if tar_dist>100:
+                    send_decision(ser, instr[0])
+                else:
+                    send_decision(ser, instr[-1])
+                
+            elif ang>aT[1][0] and ang<aT[1][1]:
+                send_decision(ser, instr[1])
+    
+            elif ang>aT[2][0] and ang<aT[2][1]:
+                send_decision(ser, instr[2]) 
+                
+            elif ang>aT[3][0] and ang<aT[3][1]:
+                send_decision(ser, instr[3])       
+    
+            elif ang>aT[4][0] and ang<aT[4][1]:
+                send_decision(ser, instr[4]) 
+                
+            elif ang>aT[5][0] and ang<aT[5][1]:
+                send_decision(ser, instr[5])
+                
+            elif ang>aT[6][0] and ang<aT[6][1]:
+                send_decision(ser, instr[6])
+                
+            elif ang>aT[7][0] and ang<aT[7][1]:
+                send_decision(ser, instr[7])
+                
+            elif ang>aT[8][0] and ang<aT[8][1]:
+                send_decision(ser, instr[8])
+                
+            elif ang>aT[9][0] and ang<aT[9][1]:
+                send_decision(ser, instr[8])
+            elif ang>190:
+                send_decision(ser, instr[9])
+        
+               
     cam.release()
     cv2.destroyAllWindows()
     

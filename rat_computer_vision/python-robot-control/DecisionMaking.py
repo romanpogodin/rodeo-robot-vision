@@ -32,6 +32,8 @@ def find_dist(coord1, coord2):
     
 
 def make_decision2(rodeo_circles, obstacle_circles, target_circles, image):
+    
+    h, w = image.shape[:2]
     dx = 0
     dy = 0
     fC = (0,0)
@@ -45,11 +47,11 @@ def make_decision2(rodeo_circles, obstacle_circles, target_circles, image):
         bC = rodeo_circles[0][0]
      # find front and back coordinates of robot
     
-    cv2.line(image, (fC[0], fC[1]), (bC[0], bC[1]), (0, 0, 0), 2) 
+    cv2.line(image, (fC[0], fC[1]), (bC[0], bC[1]), (0, 0, 255), 2) 
     
     # find center coordinates of robot
     mC = find_mid(fC, bC)
-    cv2.circle(image, mC, int(2), (255, 0, 0), 2)
+    cv2.circle(image, mC, int(2), (0, 0, 255), 2)
        
     obst_distances = []
     for i in range(len(obstacle_circles)):
@@ -60,11 +62,18 @@ def make_decision2(rodeo_circles, obstacle_circles, target_circles, image):
         targ_distances.append(find_dist(mC,target_circles[i][0]))
         
     if len(targ_distances)>0:   
+        # in blue
         closest_Tind = np.argmin(targ_distances)
         tC = target_circles[closest_Tind][0]
+        cv2.line(image, (mC[0], mC[1]), (tC[0], tC[1]), (255, 0, 0), 1) 
+        cv2.circle(image, tC, target_circles[closest_Tind][1], (255, 0, 0), 2)
+    
     if len(obst_distances)>0: 
+        # in white
         closest_Oind = np.argmin(obst_distances)
         oC = obstacle_circles[closest_Oind][0]
+        cv2.line(image, (mC[0], mC[1]), (oC[0], oC[1]), (255, 255, 255), 1)
+        cv2.circle(image, oC, obstacle_circles[closest_Oind][1], (255, 255, 255), 1)
         
     
     
@@ -89,21 +98,30 @@ def make_decision2(rodeo_circles, obstacle_circles, target_circles, image):
     ob_dist = find_dist(oC, mC)
     dxO = ob_dist*np.cos(obang)
     dyO = ob_dist*np.sin(obang)
+    if ob_dist<100:
+        alert = True
     
     tar_dist = find_dist(tC, mC)
-    dx = tar_dist*np.cos(ang)
-    dy = tar_dist*np.sin(ang)
+    dx = tar_dist*np.cos(ang)/w
+    dy = tar_dist*np.sin(ang)/h
     
-    cv2.circle(image, tC, int(2), (255, 0, 0), 2)
+    tar_norm_dist = np.sqrt(dx**2 + dy**2)
+
     
-    cv2.circle(image, oC, int(2), (255, 255, 0), 2)
-    cv2.putText(image, str("obstacle"),oC, cv2.FONT_HERSHEY_SIMPLEX, 0.2,(0,0,0),2) 
+    cv2.putText(image, str(ang),(140,50), cv2.FONT_HERSHEY_SIMPLEX, 1,(0,0,0),2)
+    
+    cv2.putText(image, str("obstacle"),oC, cv2.FONT_HERSHEY_SIMPLEX, 1,(255,255,255),2) 
+    cv2.putText(image, str("target"),tC, cv2.FONT_HERSHEY_SIMPLEX, 1,(255,0,0),2)
+    cv2.putText(image, str("robot"),mC, cv2.FONT_HERSHEY_SIMPLEX, 1,(0,0,255),2)
+    
     
     cv2.putText(image, str(int(dx)),(30, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5,(0,0,0),2) 
     cv2.putText(image, str(int(dy)),(100, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5,(0,0,0),2) 
+    cv2.putText(image, str(int(dxO)),(30, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.5,(0,0,0),2) 
+    cv2.putText(image, str(int(dyO)),(100, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.5,(0,0,0),2) 
+    
 
-
-    return (dx, dy), image
+    return (dx, dy), ang,tar_dist, image
 
             
 
