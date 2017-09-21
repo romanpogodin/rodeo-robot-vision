@@ -76,7 +76,7 @@ def process_frame(cam, min_perimeter, show_picture=True, clear_noise=True):
     image = imutils.resize(image, width=600)
     if not ret:
         print("Cannot read a frame")
-        return 1, None, None, None
+        return 1, None, None, None, None
     
     hsv_img = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
@@ -112,12 +112,10 @@ def process_frame(cam, min_perimeter, show_picture=True, clear_noise=True):
     obstacle_circles = []
     target_circles = []
     
-    cnts_o = cv2.findContours(mask_o.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
-    cnts_o = max(cnts_o, key=cv2.contourArea)
+    cnts_o = cv2.findContours(mask_o.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]    
     cnts_f = cv2.findContours(mask_f.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
-    cnts_f = max(cnts_f, key=cv2.contourArea)
     
-    
+
     cnts_b = cv2.findContours(mask_f.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
     cnts_b =sorted(cnts_f, key=cv2.contourArea)
     
@@ -127,11 +125,13 @@ def process_frame(cam, min_perimeter, show_picture=True, clear_noise=True):
     
     # find robot
     if len(cnts_o)>0:
-        ((x_g, y_g), radius_g) = cv2.minEnclosingCircle(cnts_o)
+        cnts_o1 = max(cnts_o, key=cv2.contourArea)
+        ((x_g, y_g), radius_g) = cv2.minEnclosingCircle(cnts_o1)
         rodeo_circles.append([(int(x_g), int(y_g)), int(radius_g)])
         cv2.circle(image, (int(x_g), int(y_g)), int(radius_g), (255, 0, 0), 2)        
     if len(cnts_f)>0:
-        ((x_g, y_g), radius_g) = cv2.minEnclosingCircle(cnts_f)
+        cnts_f1 = max(cnts_f, key=cv2.contourArea)
+        ((x_g, y_g), radius_g) = cv2.minEnclosingCircle(cnts_f1)
         rodeo_circles.append([(int(x_g), int(y_g)), int(radius_g)])
         cv2.circle(image, (int(x_g), int(y_g)), int(radius_g), (0, 0, 255), 2)
         
@@ -153,7 +153,7 @@ def process_frame(cam, min_perimeter, show_picture=True, clear_noise=True):
 
     # Press Q on keyboard to  exit
     if cv2.waitKey(25) & 0xFF == ord('q'):
-        return 1, None, None
+        return 1, None, None, None, None
     
     return 0, rodeo_circles, obstacle_circles, target_circles, image
     

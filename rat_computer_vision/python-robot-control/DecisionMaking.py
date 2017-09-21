@@ -34,7 +34,11 @@ def find_dist(coord1, coord2):
 def make_decision2(rodeo_circles, obstacle_circles, target_circles, image):
     dx = 0
     dy = 0
-
+    fC = (0,0)
+    bC = (0,0)
+    tC = (0,0)
+    oC = (0,0) 
+    
     if len(rodeo_circles)>1:
 #        fC, bC = find_rodeo_vector(rodeo_circles, ind)
         fC = rodeo_circles[1][0]
@@ -55,13 +59,13 @@ def make_decision2(rodeo_circles, obstacle_circles, target_circles, image):
     for i in range(len(target_circles)):
         targ_distances.append(find_dist(mC,target_circles[i][0]))
         
+    if len(targ_distances)>0:   
+        closest_Tind = np.argmin(targ_distances)
+        tC = target_circles[closest_Tind][0]
+    if len(obst_distances)>0: 
+        closest_Oind = np.argmin(obst_distances)
+        oC = obstacle_circles[closest_Oind][0]
         
-    closest_Oind = np.argmin(obst_distances)
-    closest_Tind = np.argmin(targ_distances)
-
-    tC = target_circles[closest_Tind][0]
-    
-    oC = obstacle_circles[closest_Oind][0]
     
     
     dx_rodeo = fC[0]-bC[0]
@@ -93,7 +97,7 @@ def make_decision2(rodeo_circles, obstacle_circles, target_circles, image):
     cv2.circle(image, tC, int(2), (255, 0, 0), 2)
     
     cv2.circle(image, oC, int(2), (255, 255, 0), 2)
-    cv2.putText(image, str(obstacle),oC, cv2.FONT_HERSHEY_SIMPLEX, 0.2,(0,0,0),2) 
+    cv2.putText(image, str("obstacle"),oC, cv2.FONT_HERSHEY_SIMPLEX, 0.2,(0,0,0),2) 
     
     cv2.putText(image, str(int(dx)),(30, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5,(0,0,0),2) 
     cv2.putText(image, str(int(dy)),(100, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5,(0,0,0),2) 
