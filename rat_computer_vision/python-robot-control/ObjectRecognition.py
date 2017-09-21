@@ -4,6 +4,14 @@ Object recognition using OpenCV
 import numpy as np
 import cv2
 
+def create_mask(hsv, colorLower, colorUpper):
+    import cv2
+    mask = cv2.inRange(hsv, colorLower, colorUpper)
+    mask = cv2.erode(mask, None, iterations=2)
+    mask = cv2.dilate(mask, None, iterations=2)
+    return mask
+
+
 def get_hsv_masks(color='red'):
     if color == 'red':
         return [[np.array([0, 80, 0], np.uint8),
@@ -45,43 +53,108 @@ def detect_colored_objects(hsv_img, min_perimeter, clear_noise=True, color='red'
     _, contours, hierarchy = cv2.findContours(image_threshed, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     circles = []
-    for contour in contours:
-        if len(contour) > min_perimeter:
-            radius = np.sqrt(np.sum((contour[len(contour) // 2] - contour[0]) ** 2)) / 2
-            circles.append([0.5 * (contour[0] + contour[len(contour) // 2]).reshape(2), radius])
-
+    cnts = sorted(contours, key=cv2.contourArea)[0:2]
+    for i in range(len(cnts)):
+        ((x_g, y_g), radius_g) = cv2.minEnclosingCircle(cnts[i])
+        circles.append([(int(x_g), int(y_g)), int(radius_g)])
+        
+    
+#    for contour in contours:
+#        if len(contour) > min_perimeter:
+#            radius = np.sqrt(np.sum((contour[len(contour) // 2] - contour[0]) ** 2)) / 2
+#            circles.append([0.5 * (contour[0] + contour[len(contour) // 2]).reshape(2), radius])
+#            
+    
     return circles
+#    return cnts
 
 def process_frame(cam, min_perimeter, show_picture=True, clear_noise=True):
+    import imutils
     # Initial processing
 
     ret, image = cam.read()    
-    
+    image = imutils.resize(image, width=600)
     if not ret:
         print("Cannot read a frame")
-        return 1, None, None
+        return 1, None, None, None
     
     hsv_img = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
-    rodeo_circles = detect_colored_objects(hsv_img, min_perimeter, 
-                                           clear_noise, color='orange')
-    obstacle_circles = detect_colored_objects(hsv_img, min_perimeter, 
-                                              clear_noise, color='green')
-
-    for circle in rodeo_circles:
-        cv2.circle(image, tuple(circle[0].astype('int')), 
-                   circle[1].astype('int'), (0, 0, 255), 2)
+    oLower = (0, 30, 10)
+    oUpper = (40, 255, 255)
+    
+    fLower = (29, 10, 10)
+    fUpper = (64, 255, 255)
+    
+    gLower = (0, 0, 245)
+    gUpper = (255, 6, 255)
+    
+    bLower = (0, 0, 245)
+    bUpper = (255, 6, 255)
+    
+    f_thresh = [fLower, fUpper]   
+    o_thresh = [oLower, oUpper]
+    g_thresh = [oLower, oUpper]
+    b_thresh = [bLower, bUpper]
+    
+    mask_f = create_mask(hsv_img, f_thresh[0], f_thresh[1])
+    mask_o = create_mask(hsv_img, o_thresh[0], o_thresh[1])
+    mask_g = create_mask(hsv_img, g_thresh[0], g_thresh[1])
+    mask_b = create_mask(hsv_img, b_thresh[0], b_thresh[1])
+    
+    cv2.imshow('mask_t', mask_f)
+    cv2.imshow('mask_o', mask_o)
+    cv2.imshow('mask_g', mask_g)
+    cv2.imshow('mask_b', mask_b)
+    
+    
+    rodeo_circles = []
+    obstacle_circles = []
+    target_circles = []
+    
+    cnts_o = cv2.findContours(mask_o.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
+    cnts_o = max(cnts_o, key=cv2.contourArea)
+    cnts_f = cv2.findContours(mask_f.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
+    cnts_f = max(cnts_f, key=cv2.contourArea)
+    
+    
+    cnts_b = cv2.findContours(mask_f.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
+    cnts_b =sorted(cnts_f, key=cv2.contourArea)
+    
+    cnts_g = cv2.findContours(mask_g.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
+    cnts_g = sorted(cnts_g, key=cv2.contourArea, reverse=True)
+#    cnts_g = sorted(cnts_g, key=cv2.contourArea)
+    
+    # find robot
+    if len(cnts_o)>0:
+        ((x_g, y_g), radius_g) = cv2.minEnclosingCircle(cnts_o)
+        rodeo_circles.append([(int(x_g), int(y_g)), int(radius_g)])
+        cv2.circle(image, (int(x_g), int(y_g)), int(radius_g), (255, 0, 0), 2)        
+    if len(cnts_f)>0:
+        ((x_g, y_g), radius_g) = cv2.minEnclosingCircle(cnts_f)
+        rodeo_circles.append([(int(x_g), int(y_g)), int(radius_g)])
+        cv2.circle(image, (int(x_g), int(y_g)), int(radius_g), (0, 0, 255), 2)
         
-    for circle in obstacle_circles:
-        cv2.circle(image, tuple(circle[0].astype('int')), 
-                   circle[1].astype('int'), (0, 255, 0), 2)
-    
-    cv2.imshow('Frame', image)
-    
+    # find obstacles
+    if len(cnts_g)>0:       
+        for i in range(min(len(cnts_g), 2)):
+            ((x_g, y_g), radius_g) = cv2.minEnclosingCircle(cnts_g[i])
+            obstacle_circles.append([(int(x_g), int(y_g)), int(radius_g)])
+#            cv2.circle(image, (int(x_g), int(y_g)), int(radius_g), (255, 255, 255), 2)
+            
+    # find target
+    if len(cnts_b)>0:       
+        for i in range(min(len(cnts_b), 2)):
+            ((x_g, y_g), radius_g) = cv2.minEnclosingCircle(cnts_b[i])
+            target_circles.append([(int(x_g), int(y_g)), int(radius_g)])
+#            cv2.circle(image, (int(x_g), int(y_g)), int(radius_g), (255, 255, 255), 2)
+
+
+
     # Press Q on keyboard to  exit
     if cv2.waitKey(25) & 0xFF == ord('q'):
         return 1, None, None
     
-    return 0, rodeo_circles, obstacle_circles
+    return 0, rodeo_circles, obstacle_circles, target_circles, image
     
 

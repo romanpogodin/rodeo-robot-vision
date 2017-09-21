@@ -3,9 +3,11 @@ import cv2
 import serial
 from time import sleep
 from pynput import keyboard
+import imutils
 
 from ObjectRecognition import *
 from DecisionMaking import *
+
 
 def send_decision(ser, command):
     # print("Sending %s" % command)
@@ -15,8 +17,9 @@ def send_decision(ser, command):
         ser.write(bytes([command]))
     
 def run_rodeo(max_time=1000, min_perimeter=15):
+    import imutils
     # Connect to the transmitter
-    ser = serial.Serial('COM9', 9600)
+    #ser = serial.Serial('COM9', 9600)
     
     # Connect to a webcam
     cam = cv2.VideoCapture(0)
@@ -28,29 +31,19 @@ def run_rodeo(max_time=1000, min_perimeter=15):
         if not cam.isOpened():
             print("Camera is not opened")
             break
-            
-        ret, rodeo_circles, obstacle_circles = \
+        
+        ret, rodeo_circles, obstacle_circles, image = \
             process_frame(cam, min_perimeter=min_perimeter)
         
         if ret:
             break
         
-        command = make_decision(rodeo_circles, obstacle_circles)
 
-        # A temporary thing for flexible speed
-        
-        if command == 'w':
-            command = 1
-        elif command == 'c':
-            command = 0
-        elif command == 's':
-            command = 2
-        elif command == 'a':
-            command = 3
-        elif command == 'd':
-            command = 6
+        command, image2 = make_decision2(rodeo_circles, obstacle_circles, image)
 
-        send_decision(ser, command)
+        cv2.imshow('Frame', image2)
+
+#        send_decision(ser, command)
         
     cam.release()
     cv2.destroyAllWindows()
