@@ -32,14 +32,14 @@ def run_rodeo(max_time=1000, min_perimeter=15):
             print("Camera is not opened")
             break
         
-        ret, rodeo_circles, obstacle_circles, image = \
+        ret, rodeo_circles, obstacle_circles, target_circles, image = \
             process_frame(cam, min_perimeter=min_perimeter)
         
         if ret:
             break
         
 
-        command, image2 = make_decision2(rodeo_circles, obstacle_circles, image)
+        command, image2 = make_decision2(rodeo_circles, obstacle_circles, target_circles, image)
 
         cv2.imshow('Frame', image2)
 
