@@ -7,6 +7,7 @@ import imutils
 
 from ObjectRecognition import *
 from DecisionMaking import *
+from ReinforcementLearning import *
 
 def send_decision(ser, command):
     # print("Sending %s" % command)
@@ -17,11 +18,10 @@ def send_decision(ser, command):
     
     
 def run_rodeo(max_time=10000, min_perimeter=15):
-    import imutils
     Ser = False
     if Ser == True:
     # Connect to the transmitter
-        cname = '/dev/cu.usbmodem14411'
+        cname = '/dev/cu.usbmodem14411' # COM9
         ser = serial.Serial(cname, 9600)
     
     # Connect to a webcam
@@ -42,10 +42,14 @@ def run_rodeo(max_time=10000, min_perimeter=15):
             break
         
 
-        command, ang,tar_dist, image2 = make_decision2(rodeo_circles, obstacle_circles, target_circles, image)
+        command, ang,tar_dist, image2 = make_decision2(rodeo_circles, 
+                                                       obstacle_circles, 
+                                                       target_circles, 
+                                                       image)
 
         
-        aT = [(-10, 10), (10, 35), (-35, -10),(35, 80), (-80, -35),(80, 150),(-150, -80),(150, 185),(-185, -150)]
+        aT = [(-10, 10), (10, 35), (-35, -10), (35, 80), 
+              (-80, -35),(80, 150) ,(-150, -80), (150, 185), (-185, -150)]
         instr = [1, 3, 6, 4, 7, 5, 8, 2, 0, 9]
         
         if Ser == True:
@@ -88,7 +92,70 @@ def run_rodeo(max_time=10000, min_perimeter=15):
     cam.release()
     cv2.destroyAllWindows()
     
-if __name__ == '__main__':
-    run_rodeo(max_time=1000, min_perimeter=30)
+def run_rodeo_rl(max_time=10000, min_perimeter=15):
+    # Connect to the transmitter
+    ser = serial.Serial('COM9', 9600)
     
-
+    # Connect to a webcam
+    cam = cv2.VideoCapture(0)
+    if (cam.isOpened() == False):
+        print("Error opening video stream or file")
+    
+    ret, image = cam.read()    
+    image = imutils.resize(image, width=600)
+    
+    state = np.ndarray.flatten(np.zeros_like(image))
+    
+    print(len(state))
+    
+    # Create a NN
+    network = DeepRLNetwork()
+    network.init_network(len(state), 6, (500, 500))
+    reward = 0
+    
+    old_reward = 0
+    
+    # Process video
+    for curr_time in range(max_time):
+        # MAKE ACTION BASED ON PREVIOUS SOLUTION
+        action = network.choose_action(state)
+    
+        send_decision(ser, action)
+        
+        # LOOK AT THE RESULT
+        
+        if not cam.isOpened():
+            print("Camera is not opened")
+            break
+            
+        ret, rodeo_circles, obstacle_circles, target_circles, image, new_state = \
+            process_frame(cam, min_perimeter=min_perimeter)
+        
+        if ret:
+            break  
+        
+        print(len(np.ndarray.flatten(new_state)))
+        
+        tar_dist, ob_dist = closest_distance_rl(rodeo_circles, 
+                                                obstacle_circles, 
+                                                target_circles)
+        
+        reward = 1 / (1 + tar_dist) - 1 / (1 + ob_dist)
+        
+        if old_reward - reward > 0.3: # if we popped a baloon
+            reward = 0.5
+        
+        new_state = np.ndarray.flatten(new_state)
+        
+        network.report_action(reward, new_state)
+        network.update_weights()
+        
+        state = new_state
+        
+    cam.release()
+    cv2.destroyAllWindows()
+    
+    
+if __name__ == '__main__':
+    run_rodeo_rl(max_time=1000, min_perimeter=30)
+    
