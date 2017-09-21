@@ -8,23 +8,27 @@ from keras.layers.core import Dense, Activation, Dropout
 from keras.optimizers import RMSprop
 import numpy as np
 import random
+import time
+
+def get_reward(rodeo_circles, obstacle_circles, target_circles):
+    return
 
 def init_neural_net(num_sensors, num_commands, layers_size, load=''):
     model = Sequential()
-
+    
     # First layer.
     model.add(Dense(layers_size[0], 
-                    init='lecun_uniform', input_shape=(num_sensors,)))
+                    kernel_initializer='lecun_uniform', input_shape=(num_sensors,)))
     model.add(Activation('relu'))
     model.add(Dropout(0.2))
 
     # Second layer.
-    model.add(Dense(layers_size[1], init='lecun_uniform'))
+    model.add(Dense(layers_size[1], kernel_initializer='lecun_uniform'))
     model.add(Activation('relu'))
     model.add(Dropout(0.2))
 
     # Output layer.
-    model.add(Dense(num_commands, init='lecun_uniform'))
+    model.add(Dense(num_commands, kernel_initializer='lecun_uniform'))
     model.add(Activation('linear'))
 
     rms = RMSprop()
@@ -55,7 +59,6 @@ class DeepRLNetwork:
         self.state = None
 
     def process_minibatch(self, minibatch):
-        """This does the heavy lifting, aka, the training. It's super jacked."""
         X_train = []
         y_train = []
         # Loop through our batch and create arrays for X and y
@@ -69,7 +72,7 @@ class DeepRLNetwork:
             newQ = self.model.predict(new_state_m, batch_size=1)
             # Get our best move. I think?
             maxQ = np.max(newQ)
-            y = np.zeros((1, 3))
+            y = np.zeros((1, self.num_commands))
             y[:] = old_qval[:]
 
             update = (reward_m + (self.gamma * maxQ))
@@ -77,7 +80,7 @@ class DeepRLNetwork:
             # Update the value for the action we took.
             y[0][action_m] = update
             X_train.append(old_state_m.reshape(self.num_sensors,))
-            y_train.append(y.reshape(3,))
+            y_train.append(y.reshape(self.num_commands,))
     
         X_train = np.array(X_train)
         y_train = np.array(y_train)
@@ -107,7 +110,7 @@ class DeepRLNetwork:
 
         self.model.fit(
             X_train, y_train, batch_size=self.batch_size,
-            nb_epoch=1, verbose=0
+            epochs=1, verbose=0
         )
     
     def choose_action(self, state):
@@ -126,13 +129,43 @@ class DeepRLNetwork:
         
         self.state = state
         
+        self.curr_time += 1
+        
         return self.action
     
     def report_action(self, reward, new_state):
         # Experience replay storage.
         self.replay.append((self.state, self.action, reward, new_state))
- 
+        
+# test function
+def create_state(input_size):
+    return np.array([np.random.randn(input_size)]), np.random.randint(-2, 2)
 
+if __name__ == '__main__':
+    input_size = 1000
+    network = DeepRLNetwork()
+    network.init_network(input_size, 6, (1000, 100))
+    reward = 0
+    state = np.array([np.ones(input_size)])
+    
+    old_time = time.clock()
+    new_time = old_time
+    
+    # Process video
+    for curr_time in range(140):
+        if curr_time % 10 == 0:
+            new_time = time.clock()
+            print("Iter %d, time passed %f" % (curr_time, new_time - old_time))
+            old_time = new_time
+            
+        # MAKE ACTION BASED ON PREVIOUS SOLUTION
+        action = network.choose_action(state)
+        
+        new_state, reward = create_state(input_size)
+        network.report_action(reward, new_state)
+        network.update_weights()
+        
+        state = new_state
 '''
 init
 
@@ -165,7 +198,7 @@ state = CREATE A NEW STATE()
 
 # Process video
 for curr_time in range(max_time):
-    // MAKE ACTION BASED ON PREVIOUS SOLUTION
+    # MAKE ACTION BASED ON PREVIOUS SOLUTION
     action = network.choose_action(state)
     
     command = make_decision(rodeo_circles, obstacle_circles)
@@ -185,7 +218,7 @@ for curr_time in range(max_time):
 
     send_decision(ser, command)
     
-    // LOOK AT THE RESULT
+    # LOOK AT THE RESULT
     
     if not cam.isOpened():
         print("Camera is not opened")
