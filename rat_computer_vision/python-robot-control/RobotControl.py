@@ -18,7 +18,7 @@ def send_decision(ser, command):
     
 def run_rodeo(max_time=10000, min_perimeter=15):
     import imutils
-    Ser = True
+    Ser = False
     if Ser == True:
     # Connect to the transmitter
         cname = '/dev/cu.usbmodem14411'
@@ -44,7 +44,7 @@ def run_rodeo(max_time=10000, min_perimeter=15):
 
         command, ang,tar_dist, image2 = make_decision2(rodeo_circles, obstacle_circles, target_circles, image)
 
-        cv2.imshow('Frame', image2)
+        
         aT = [(-10, 10), (10, 35), (-35, -10),(35, 80), (-80, -35),(80, 150),(-150, -80),(150, 185),(-185, -150)]
         instr = [1, 3, 6, 4, 7, 5, 8, 2, 0, 9]
         
@@ -78,12 +78,12 @@ def run_rodeo(max_time=10000, min_perimeter=15):
                 
             elif ang>aT[8][0] and ang<aT[8][1]:
                 send_decision(ser, instr[8])
-                
-            elif ang>aT[9][0] and ang<aT[9][1]:
-                send_decision(ser, instr[8])
+
             elif ang>190:
                 send_decision(ser, instr[9])
             sleep(0.2)
+            
+        cv2.imshow('Frame', image2)
                
     cam.release()
     cv2.destroyAllWindows()

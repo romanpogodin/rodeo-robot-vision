@@ -93,15 +93,18 @@ def make_decision2(rodeo_circles, obstacle_circles, target_circles, image):
     s_angle = np.arctan2(dy_rodeo,dx_rodeo)*180/np.pi
     
     ang = l_angle-s_angle
+    
     obang = ob_angle-s_angle
     
     ob_dist = find_dist(oC, mC)
     dxO = ob_dist*np.cos(obang)
     dyO = ob_dist*np.sin(obang)
+    
     if ob_dist<100:
         alert = True
     
     tar_dist = find_dist(tC, mC)
+    
     dx = tar_dist*np.cos(ang)/w
     dy = tar_dist*np.sin(ang)/h
     

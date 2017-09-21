@@ -93,9 +93,9 @@ def process_frame(cam, min_perimeter, show_picture=True, clear_noise=True):
     bUpper = (110, 255, 255)
     
     # front
-    f_thresh = [oLower, oUpper]   
+    f_thresh = [fLower, fUpper]   
     # back
-    o_thresh = [fLower, fUpper]
+    o_thresh = [oLower, oUpper]
 
     #obstacle color    
     g_thresh = [gLower, gUpper]
