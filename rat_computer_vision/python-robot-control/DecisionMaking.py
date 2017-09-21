@@ -14,9 +14,9 @@ def make_decision(rodeo_circles, obstacle_circles):
     
     rodeo_distances = np.zeros(3)
     
-    rodeo_distances[0] = np.sum(rodeo_circles[0][0] - rodeo_circles[1][0]) ** 2
-    rodeo_distances[1] = np.sum(rodeo_circles[1][0] - rodeo_circles[2][0]) ** 2
-    rodeo_distances[2] = np.sum(rodeo_circles[2][0] - rodeo_circles[0][0]) ** 2
+    rodeo_distances[0] = np.sum((rodeo_circles[0][0] - rodeo_circles[1][0]) ** 2)
+    rodeo_distances[1] = np.sum((rodeo_circles[1][0] - rodeo_circles[2][0]) ** 2)
+    rodeo_distances[2] = np.sum((rodeo_circles[2][0] - rodeo_circles[0][0]) ** 2)
     
     ind = np.argmin(rodeo_distances)
     
