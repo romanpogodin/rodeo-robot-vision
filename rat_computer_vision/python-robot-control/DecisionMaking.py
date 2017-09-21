@@ -31,6 +31,45 @@ def find_dist(coord1, coord2):
     return int(dist)
     
 
+def closest_distance_rl(rodeo_circles, obstacle_circles, target_circles):
+    tar_dist = 1000
+    dx = 0
+    dy = 0
+    fC = (0,0)
+    bC = (0,0)
+    tC = (0,0)
+    oC = (0,0) 
+    
+    if len(rodeo_circles)>1:
+#        fC, bC = find_rodeo_vector(rodeo_circles, ind)
+        fC = rodeo_circles[1][0]
+        bC = rodeo_circles[0][0]
+    mC = find_mid(fC, bC)
+      
+    obst_distances = []
+    for i in range(len(obstacle_circles)):
+        obst_distances.append(find_dist(mC,obstacle_circles[i][0]))
+        
+    targ_distances = []
+    for i in range(len(target_circles)):
+        targ_distances.append(find_dist(mC,target_circles[i][0]))
+      
+    if len(targ_distances)>0:   
+        # in blue
+        closest_Tind = np.argmin(targ_distances)
+        tC = target_circles[closest_Tind][0]  
+    if len(obst_distances)>0: 
+        # in white
+        closest_Oind = np.argmin(obst_distances)
+        oC = obstacle_circles[closest_Oind][0]
+    
+    ob_dist = find_dist(oC, mC)
+
+    tar_dist = find_dist(tC, mC) 
+    tar_norm_dist = np.sqrt(dx**2 + dy**2)
+
+    return tar_dist, ob_dist
+
 def make_decision2(rodeo_circles, obstacle_circles, target_circles, image):
     
     h, w = image.shape[:2]
