@@ -67,7 +67,7 @@ def process_frame(cam, min_perimeter, show_picture=True, clear_noise=True):
     import imutils
 
     ret, image = cam.read()    
-    image = imutils.resize(image, width=600)
+#    image = imutils.resize(image, width=600)
     
     if not ret:
         print("Cannot read a frame")
@@ -106,15 +106,13 @@ def process_frame(cam, min_perimeter, show_picture=True, clear_noise=True):
     mask_o = create_mask(hsv_img, o_thresh[0], o_thresh[1])
     mask_g = create_mask(hsv_img, g_thresh[0], g_thresh[1])
     mask_b = create_mask(hsv_img, b_thresh[0], b_thresh[1])
-    
 
     
-    
-    cv2.imshow('mask_green', mask_f)
-    cv2.imshow('mask_orange', mask_o)
-    cv2.imshow('mask_white', mask_g)
-    cv2.imshow('mask_blue', mask_b)
-    
+#    cv2.imshow('mask_green', mask_f)
+#    cv2.imshow('mask_orange', mask_o)
+#    cv2.imshow('mask_white', mask_g)
+#    cv2.imshow('mask_blue', mask_b)
+#    
     
     rodeo_circles = []
     obstacle_circles = []
@@ -140,14 +138,14 @@ def process_frame(cam, min_perimeter, show_picture=True, clear_noise=True):
         cnts_o1 = max(cnts_o, key=cv2.contourArea)
         ((x_g, y_g), radius_g) = cv2.minEnclosingCircle(cnts_o1)
         rodeo_circles.append([(int(x_g), int(y_g)), int(radius_g)])
-        cv2.circle(image, (int(x_g), int(y_g)), int(radius_g), (0, 0, 255), 2)
+        cv2.circle(image, (int(x_g), int(y_g)), int(radius_g), (255, 165, 0), 2)
 #        mask_rl[int(x_g), int(y_g)] = 3
         
     if len(cnts_f)>0:
         cnts_f1 = max(cnts_f, key=cv2.contourArea)
         ((x_g, y_g), radius_g) = cv2.minEnclosingCircle(cnts_f1)
         rodeo_circles.append([(int(x_g), int(y_g)), int(radius_g)])
-        cv2.circle(image, (int(x_g), int(y_g)), int(radius_g), (0, 0, 255), 2)
+        cv2.circle(image, (int(x_g), int(y_g)), int(radius_g), (0, 255, 0), 2)
 #        mask_rl[int(x_g), int(y_g)] = 3
         
     
