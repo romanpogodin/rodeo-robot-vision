@@ -93,21 +93,21 @@ def run_rodeo(max_time=1000000, min_perimeter=15):
                     send_decision(ser, cS)
                         
             elif ang>aT[1][0] and ang<aT[1][1]:
-                cS = 7
+                cS = 4
                 cv2.putText(image2, "going slightly left",(20,280), cv2.FONT_HERSHEY_SIMPLEX, 1,(0,0,255),2)
                 send_decision(ser, cS)
             elif ang>aT[2][0] and ang<aT[2][1]:
-                cS = 4  
+                cS = 7
                 cv2.putText(image2, "going slightly right",(20,280), cv2.FONT_HERSHEY_SIMPLEX, 1,(0,0,255),2)
                 send_decision(ser, cS)
                          
             elif ang>aT[3][0] and ang<aT[3][1]:
-                cS = 8
+                cS = 5
                 send_decision(ser, cS)
                 cv2.putText(image2, "going left",(20,280), cv2.FONT_HERSHEY_SIMPLEX, 1,(0,0,255),2)
     
             elif ang>aT[4][0] and ang<aT[4][1]:
-                cS = 5
+                cS = 8
                 send_decision(ser, cS)
                 cv2.putText(image2, "going right",(20,280), cv2.FONT_HERSHEY_SIMPLEX, 1,(0,0,255),2)
                 
