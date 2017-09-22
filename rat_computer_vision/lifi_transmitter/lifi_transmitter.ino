@@ -55,65 +55,41 @@ void setup() {
 
 }
 
-  byte transmitted_signal;
+  byte transmitted_signal = 0;
+  byte old_signal = 0;
   int start = 1;
 
 
 void loop() {
-    delay(100);
+    delay(300);
   /****************** Transmitting Role ***************************/
-                              // First, stop listening so we can talk.
-
+  // First, stop listening so we can talk.
   
-
-  char inByte = 'c';
+  
   if (Serial.available()) { // only send data back if data has been sent
-    char inByte = Serial.read();
-    if (inByte == 'w') {
-       if (transmitted_signal == 1) {
-          return;
-      }
-      transmitted_signal = 1; //forward
-    } else if (inByte == 'a') {
-       if (transmitted_signal == 3) {
-         return;
-      }
-      transmitted_signal = 3; //left
-    } else if (inByte == 's') {
-       if (transmitted_signal == 2) {
-        return;
-      }
-      transmitted_signal = 2; //back
-    } else if (inByte == 'd') {
-        if (transmitted_signal == 4) {
-          return;
-      }
-      transmitted_signal = 4; //right
-    } else if (inByte == 'c') {
-        if (transmitted_signal == 0) {
-          return;
-      }
-      transmitted_signal = 0;
-    }
-  }  else if (start != 1) {
-    return;
+    transmitted_signal = Serial.read();
   }
   Serial.println(transmitted_signal);
   
-  radio.stopListening();  
+  
+  if (start == 0 && transmitted_signal == old_signal) {
+    Serial.println("skip");
+    return;
+  }  else {
+  radio.stopListening();
   Serial.println(F("Now sending"));
   if (!radio.write(&transmitted_signal, sizeof(byte))) {
     Serial.println("failed");
-  }
-  else {
+    delay(300);
+  } else {
     Serial.println("sent");
+    old_signal = transmitted_signal;
+  }
+  start = 0;
   }
 
-  start = 0;
+  
   // Try again 100 ms later
-
-
-
 }
 
 // FIN

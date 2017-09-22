@@ -8,7 +8,6 @@ import imutils
 from ObjectRecognition import *
 from DecisionMaking import *
 #from ReinforcementLearning import *
-
 def send_decision(ser, command):
     # print("Sending %s" % command)
     if type(command) == str:
@@ -19,9 +18,10 @@ def send_decision(ser, command):
     
 def run_rodeo(max_time=10000, min_perimeter=15):
     Ser = False
-    if Ser == True:
+    Ser2 = True
+    if Ser == True or Ser2 == True:
     # Connect to the transmitter
-        cname = '/dev/cu.usbmodem14411' # COM9
+        cname = '/dev/cu.usbmodem1431' # COM9
         ser = serial.Serial(cname, 9600)
     
     # Connect to a webcam
@@ -49,10 +49,31 @@ def run_rodeo(max_time=10000, min_perimeter=15):
 
         
         aT = [(-10, 10), (10, 35), (-35, -10), (35, 80), 
-              (-80, -35),(80, 150) ,(-150, -80), (150, 185), (-185, -150)]
+              (-80, -35),(80, 150) ,(-150, -80), (150, 185), (-185, -150)]        
         instr = [1, 3, 6, 4, 7, 5, 8, 2, 0, 9]
         
+        aT2 = [(-45, 45), (45, 135), (-135, -45), (180, 135) , (-180, -135)]
+        
         cS = -1
+        if Ser2 == True:
+            if ang>aT2[0][0] and ang<aT2[0][1]:
+                cS = 1
+                send_decision(ser, 1)
+            elif ang>aT2[1][0] and ang<aT2[1][1]:
+                cS = 4
+                send_decision(ser, cS)
+            elif ang>aT2[2][0] and ang<aT2[2][1]:
+                cS = 3
+                send_decision(ser, cS)    
+            elif ang>aT2[3][0] and ang<aT2[3][1]:
+                cS = 2
+                send_decision(ser, cS)
+            elif ang>aT2[4][0] and ang<aT2[4][1]:
+                cS = 2
+                send_decision(ser, cS)
+            sleep(0.2)
+          
+            
         if Ser == True:
             if ang>aT[0][0] and ang<aT[0][1]:
                 if tar_dist>100:
@@ -60,16 +81,14 @@ def run_rodeo(max_time=10000, min_perimeter=15):
                     cS = instr[0]
                 else:
                     send_decision(ser, instr[-1])
-                    cS = instr[-1]
-                
+                    cS = instr[-1]     
             elif ang>aT[1][0] and ang<aT[1][1]:
                 send_decision(ser, instr[1])
                 cS = instr[1]
     
             elif ang>aT[2][0] and ang<aT[2][1]:
                 send_decision(ser, instr[2])
-                cS = instr[2]
-                
+                cS = instr[2]           
             elif ang>aT[3][0] and ang<aT[3][1]:
                 send_decision(ser, instr[3])
                 cS = instr[3]
@@ -97,6 +116,7 @@ def run_rodeo(max_time=10000, min_perimeter=15):
                 send_decision(ser, instr[9])
                 cS = "attack!"
             sleep(0.2)
+            
             
         cv2.putText(image2, "sending" + str(cS),(20,300), cv2.FONT_HERSHEY_SIMPLEX, 1,(0,0,255),2)
         cv2.imshow('Frame', image2)

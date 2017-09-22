@@ -152,16 +152,14 @@ def make_decision2(rodeo_circles, obstacle_circles, target_circles, image):
     dy = tar_dist*np.sin(ang)/h
 
         
-    tar_norm_dist = np.sqrt(dx**2 + dy**2)
-    cv2.putText(image, str(ang),(140,50), cv2.FONT_HERSHEY_SIMPLEX, 0.5,(0,0,0),2)
-    
+    tar_norm_dist = np.sqrt(dx**2 + dy**2) 
 
-    cv2.putText(image, str("F"),fC, cv2.FONT_HERSHEY_SIMPLEX, 0.5,(0,0,255),2) 
-    cv2.putText(image, str("B"),bC, cv2.FONT_HERSHEY_SIMPLEX, 0.5,(0,0,255),2) 
+    cv2.putText(image, str("F"),fC, cv2.FONT_HERSHEY_SIMPLEX, 0.5,(0, 255, 0),2) 
+    cv2.putText(image, str("B"),bC, cv2.FONT_HERSHEY_SIMPLEX, 0.5,(0, 165, 255),2) 
     
     cv2.putText(image, str("obstacle"),oC, cv2.FONT_HERSHEY_SIMPLEX, 0.8,(255,255,255),2) 
     cv2.putText(image, str("target"),tC, cv2.FONT_HERSHEY_SIMPLEX, 0.8,(255,0,0),2)
-    cv2.putText(image, str("robot"),mC, cv2.FONT_HERSHEY_SIMPLEX, 0.8,(0,0,255),2)
+    cv2.putText(image, str("robot"),mC, cv2.FONT_HERSHEY_SIMPLEX, 0.8,(0,0,0),2)
     
     cv2.putText(image, "distance to target = " + str(int(tar_dist)),(10, 20), \
                 cv2.FONT_HERSHEY_SIMPLEX, 0.5,(0,0,0),2) 
@@ -172,10 +170,13 @@ def make_decision2(rodeo_circles, obstacle_circles, target_circles, image):
     cv2.putText(image, "angle to target = " + str(int(ang)),(10, 80), \
             cv2.FONT_HERSHEY_SIMPLEX, 0.5,(0,0,0),2)
 
-    if ob_dist<100:
-        ang = 0.85*ang-0.15*obang    
+    if ob_dist<250:
+        ang = 0.2*ang-0.8*obang    
         cv2.putText(image, "alert!! obstacle approaching!",(50, 1100), \
             cv2.FONT_HERSHEY_SIMPLEX, 0.7,(0,0,255),2)
+    if tar_dist<50:   
+        cv2.putText(image, "nearly there!!",(50, 1100), \
+            cv2.FONT_HERSHEY_SIMPLEX, 0.7,(0,255,0),2)
         
 #    cv2.putText(image, str(int(dx)),(30, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5,(0,0,0),2) 
 #    cv2.putText(image, str(int(dy)),(100, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5,(0,0,0),2) 

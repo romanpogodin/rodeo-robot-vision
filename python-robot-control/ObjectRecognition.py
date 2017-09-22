@@ -138,7 +138,7 @@ def process_frame(cam, min_perimeter, show_picture=True, clear_noise=True):
         cnts_o1 = max(cnts_o, key=cv2.contourArea)
         ((x_g, y_g), radius_g) = cv2.minEnclosingCircle(cnts_o1)
         rodeo_circles.append([(int(x_g), int(y_g)), int(radius_g)])
-        cv2.circle(image, (int(x_g), int(y_g)), int(radius_g), (255, 165, 0), 2)
+        cv2.circle(image, (int(x_g), int(y_g)), int(radius_g), (0, 165, 255), 2)
 #        mask_rl[int(x_g), int(y_g)] = 3
         
     if len(cnts_f)>0:
