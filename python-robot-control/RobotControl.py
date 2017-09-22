@@ -17,8 +17,8 @@ def send_decision(ser, command):
     
     
 def run_rodeo(max_time=10000, min_perimeter=15):
-    Ser = False
-    Ser2 = True
+    Ser = True
+    Ser2 = False
     if Ser == True or Ser2 == True:
     # Connect to the transmitter
         cname = '/dev/cu.usbmodem1431' # COM9
@@ -124,70 +124,85 @@ def run_rodeo(max_time=10000, min_perimeter=15):
     cam.release()
     cv2.destroyAllWindows()
     
-#def run_rodeo_rl(max_time=10000, min_perimeter=15):
-#    # Connect to the transmitter
-#    ser = serial.Serial('COM9', 9600)
-#    
-#    # Connect to a webcam
-#    cam = cv2.VideoCapture(0)
-#    if (cam.isOpened() == False):
-#        print("Error opening video stream or file")
-#    
-#    ret, image = cam.read()    
+def run_rodeo_rl(max_time=10000, min_perimeter=15):
+    # Connect to the transmitter
+    ser = serial.Serial('COM9', 9600)
+    
+    # Connect to a webcam
+    cam = cv2.VideoCapture(0)
+    if (cam.isOpened() == False):
+        print("Error opening video stream or file")
+    
+    ret, image = cam.read()    
 #    image = imutils.resize(image, width=600)
-#    
-#    state = np.ndarray.flatten(np.zeros_like(image))
-#    
-#    print(len(state))
-#    
-#    # Create a NN
-#    network = DeepRLNetwork()
-#    network.init_network(len(state), 6, (500, 500))
-#    reward = 0
-#    
-#    old_reward = 0
-#    
-#    # Process video
-#    for curr_time in range(max_time):
-#        # MAKE ACTION BASED ON PREVIOUS SOLUTION
-#        action = network.choose_action(state)
-#    
-#        send_decision(ser, action)
-#        
-#        # LOOK AT THE RESULT
-#        
-#        if not cam.isOpened():
-#            print("Camera is not opened")
-#            break
-#            
-#        ret, rodeo_circles, obstacle_circles, target_circles, image, new_state = \
-#            process_frame(cam, min_perimeter=min_perimeter)
-#        
-#        if ret:
-#            break  
-#        
-#        print(len(np.ndarray.flatten(new_state)))
-#        
-#        tar_dist, ob_dist = closest_distance_rl(rodeo_circles, 
-#                                                obstacle_circles, 
-#                                                target_circles)
-#        
-#        reward = 1 / (1 + tar_dist) - 1 / (1 + ob_dist)
-#        
-#        if old_reward - reward > 0.3: # if we popped a baloon
-#            reward = 0.5
-#        
-#        new_state = np.ndarray.flatten(new_state)
-#        
-#        network.report_action(reward, new_state)
-#        network.update_weights()
-#        
-#        state = new_state
-#        
-#    cam.release()
-#    cv2.destroyAllWindows()
-#    
+
+    image = image[::4, ::4, 0]
+
+    state = np.array([np.ndarray.flatten(np.zeros(image.shape))])
+    
+    # Create a NN
+    network = DeepRLNetwork()
+    network.init_network(len(np.ndarray.flatten(np.zeros(image.shape[0:2]))),
+                         4, (400, 400))
+    reward = 0
+    
+    old_reward = 0
+    
+    tar_dist = 1000
+    ob_dist = 1000
+    
+    # Process video
+    for curr_time in range(max_time):
+        
+        if (curr_time == 30):
+            print('here')
+        
+        # MAKE ACTION BASED ON PREVIOUS SOLUTION
+        action = network.choose_action(state)
+    
+        if tar_dist < 50 and np.random.rand() < 0.5: # near a baloon
+            action = 9
+        elif action == 3: # translate output to robot commands 
+            action = 6 # right
+        else:
+            action += 1
+    
+        send_decision(ser, action)
+        
+        # LOOK AT THE RESULT
+        
+        if not cam.isOpened():
+            print("Camera is not opened")
+            break
+            
+        ret, rodeo_circles, obstacle_circles, target_circles, image, new_state = \
+            process_frame(cam, min_perimeter=min_perimeter)
+        
+        if ret:
+            print('Camera is not opened or image processing went wrong')
+            break  
+        
+        tar_dist, ob_dist = closest_distance_rl(rodeo_circles, 
+                                                obstacle_circles, 
+                                                target_circles)
+        
+        reward = 1 / (1 + tar_dist) - 1 / (1 + ob_dist)
+        
+        if old_reward - reward > 0.3: # if we popped a baloon
+            reward = 0.5
+        
+        new_state = new_state[::4, ::4]
+        new_state = np.array([np.ndarray.flatten(new_state)])
+        
+        network.report_action(reward, new_state)
+        network.update_weights()
+        
+        state = new_state
+        
+        cv2.imshow('Frame', image)
+        
+    cam.release()
+    cv2.destroyAllWindows()
     
 if __name__ == '__main__':
-    run_rodeo(max_time=1000, min_perimeter=30)
-    
+    run_rodeo_rl(max_time=1000, min_perimeter=30)
