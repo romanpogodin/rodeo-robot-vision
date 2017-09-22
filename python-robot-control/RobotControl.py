@@ -124,7 +124,7 @@ def run_rodeo(max_time=10000, min_perimeter=15):
     cam.release()
     cv2.destroyAllWindows()
     
-def run_rodeo_rl(max_time=10000, min_perimeter=15):
+def run_rodeo_rl(max_time=500, min_perimeter=15, loadname='', savename=''):
     # Connect to the transmitter
     ser = serial.Serial('COM9', 9600)
     
@@ -143,7 +143,7 @@ def run_rodeo_rl(max_time=10000, min_perimeter=15):
     # Create a NN
     network = DeepRLNetwork()
     network.init_network(len(np.ndarray.flatten(np.zeros(image.shape[0:2]))),
-                         4, (400, 400))
+                         4, (400, 400), loadname)
     reward = 0
     
     old_reward = 0
@@ -153,9 +153,10 @@ def run_rodeo_rl(max_time=10000, min_perimeter=15):
     
     # Process video
     for curr_time in range(max_time):
-        
-        if (curr_time == 30):
-            print('here')
+          
+        if savename and curr_time == max_time - 10:
+            network.save_weights(savename)
+            print('Weights saved to %s' % savename)
         
         # MAKE ACTION BASED ON PREVIOUS SOLUTION
         action = network.choose_action(state)
@@ -204,5 +205,7 @@ def run_rodeo_rl(max_time=10000, min_perimeter=15):
     cam.release()
     cv2.destroyAllWindows()
     
+    
 if __name__ == '__main__':
-    run_rodeo_rl(max_time=1000, min_perimeter=30)
+    run_rodeo_rl(max_time=500, min_perimeter=30, loadname='', 
+                 savename='')
