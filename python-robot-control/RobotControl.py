@@ -13,19 +13,21 @@ def send_decision(ser, command):
     if type(command) == str:
         ser.write(bytes(command, 'utf-8'))
     elif type(command) == int:
+        
         ser.write(bytes([command]))
     
     
-def run_rodeo(max_time=10000, min_perimeter=15):
+def run_rodeo(max_time=1000000, min_perimeter=15):
     Ser = False
-    Ser2 = False
+    Ser2 = True
+   
     if Ser == True or Ser2 == True:
     # Connect to the transmitter
-        cname = '/dev/cu.usbmodem1431' # COM9
+        cname = '/dev/cu.usbmodem1461' # COM9
         ser = serial.Serial(cname, 9600)
     
     # Connect to a webcam
-    cam = cv2.VideoCapture(0)
+    cam = cv2.VideoCapture(1)
     if (cam.isOpened() == False):
         print("Error opening video stream or file")
     
@@ -48,8 +50,8 @@ def run_rodeo(max_time=10000, min_perimeter=15):
                                                        image)
 
         
-        aT = [(-10, 10), (10, 35), (-35, -10), (35, 80), 
-              (-80, -35),(80, 150) ,(-150, -80), (150, 185), (-185, -150)]        
+        aT = [(-25, 25), (-90, 25), (25, 90), (-160, -90), 
+              (90, 160), (-180, -160) ,(160, 180), (150, 185), (-185, -150)]        
         instr = [1, 3, 6, 4, 7, 5, 8, 2, 0, 9]
         
         aT2 = [(-45, 45), (45, 135), (-135, -45), (180, 135) , (-180, -135)]
@@ -58,67 +60,85 @@ def run_rodeo(max_time=10000, min_perimeter=15):
         if Ser2 == True:
             if ang>aT2[0][0] and ang<aT2[0][1]:
                 cS = 1
+                cv2.putText(image2, "going straight",(20,280), cv2.FONT_HERSHEY_SIMPLEX, 1,(0,0,255),2)
                 send_decision(ser, 1)
             elif ang>aT2[1][0] and ang<aT2[1][1]:
                 cS = 4
                 send_decision(ser, cS)
+                cv2.putText(image2, "going right",(20,280), cv2.FONT_HERSHEY_SIMPLEX, 1,(0,0,255),2)
             elif ang>aT2[2][0] and ang<aT2[2][1]:
                 cS = 3
                 send_decision(ser, cS)    
+                cv2.putText(image2, "going left",(20,280), cv2.FONT_HERSHEY_SIMPLEX, 1,(0,0,255),2)
             elif ang>aT2[3][0] and ang<aT2[3][1]:
                 cS = 2
                 send_decision(ser, cS)
+                cv2.putText(image2, "reversing",(20,280), cv2.FONT_HERSHEY_SIMPLEX, 1,(0,0,255),2)
             elif ang>aT2[4][0] and ang<aT2[4][1]:
                 cS = 2
                 send_decision(ser, cS)
+                cv2.putText(image2, "reversing",(20,280), cv2.FONT_HERSHEY_SIMPLEX, 1,(0,0,255),2)
             sleep(0.2)
           
             
         if Ser == True:
             if ang>aT[0][0] and ang<aT[0][1]:
-                if tar_dist>100:
-                    send_decision(ser, instr[0])
-                    cS = instr[0]
+                if tar_dist>60:
+                    cS = 1
+                    cv2.putText(image2, "going straight",(20,280), cv2.FONT_HERSHEY_SIMPLEX, 1,(0,0,255),2)
+                    send_decision(ser, cS)    
                 else:
-                    send_decision(ser, instr[-1])
-                    cS = instr[-1]     
+                    cS = 9
+                    cv2.putText(image2, "attacking",(20,280), cv2.FONT_HERSHEY_SIMPLEX, 1,(0,0,255),2)
+                    send_decision(ser, cS)
+                        
             elif ang>aT[1][0] and ang<aT[1][1]:
-                send_decision(ser, instr[1])
-                cS = instr[1]
-    
+                cS = 7
+                cv2.putText(image2, "going slightly left",(20,280), cv2.FONT_HERSHEY_SIMPLEX, 1,(0,0,255),2)
+                send_decision(ser, cS)
             elif ang>aT[2][0] and ang<aT[2][1]:
-                send_decision(ser, instr[2])
-                cS = instr[2]           
+                cS = 4  
+                cv2.putText(image2, "going slightly right",(20,280), cv2.FONT_HERSHEY_SIMPLEX, 1,(0,0,255),2)
+                send_decision(ser, cS)
+                         
             elif ang>aT[3][0] and ang<aT[3][1]:
-                send_decision(ser, instr[3])
-                cS = instr[3]
+                cS = 8
+                send_decision(ser, cS)
+                cv2.putText(image2, "going left",(20,280), cv2.FONT_HERSHEY_SIMPLEX, 1,(0,0,255),2)
     
             elif ang>aT[4][0] and ang<aT[4][1]:
-                send_decision(ser, instr[4])
-                cS = instr[4]
+                cS = 5
+                send_decision(ser, cS)
+                cv2.putText(image2, "going right",(20,280), cv2.FONT_HERSHEY_SIMPLEX, 1,(0,0,255),2)
                 
             elif ang>aT[5][0] and ang<aT[5][1]:
-                send_decision(ser, instr[5])
-                cS = instr[5]
+                cS = 2
+                send_decision(ser, 2)
+                cv2.putText(image2, "reversing",(20,280), cv2.FONT_HERSHEY_SIMPLEX, 1,(0,0,255),2)
                 
             elif ang>aT[6][0] and ang<aT[6][1]:
-                send_decision(ser, instr[6])
-                cS = instr[6]
+                cS = 2
+                send_decision(ser, 2)
+                cv2.putText(image2, "reversing",(20,280), cv2.FONT_HERSHEY_SIMPLEX, 1,(0,0,255),2)
                 
-            elif ang>aT[7][0] and ang<aT[7][1]:
-                send_decision(ser, instr[7])
-                cS = instr[7]
-                
-            elif ang>aT[8][0] and ang<aT[8][1]:
-                send_decision(ser, instr[8])
-                cS = instr[8]
-            elif ang>190:
-                send_decision(ser, instr[9])
-                cS = "attack!"
+#            elif ang>aT[6][0] and ang<aT[6][1]:
+#                send_decision(ser, instr[6])
+#                cS = instr[6]
+#                
+#            elif ang>aT[7][0] and ang<aT[7][1]:
+#                send_decision(ser, instr[7])
+#                cS = instr[7]
+#                
+#            elif ang>aT[8][0] and ang<aT[8][1]:
+#                send_decision(ser, instr[8])
+#                cS = instr[8]
+#            elif ang>190:
+#                send_decision(ser, instr[9])
+#                cS = "attack!"
             sleep(0.2)
             
             
-        cv2.putText(image2, "sending" + str(cS),(20,300), cv2.FONT_HERSHEY_SIMPLEX, 1,(0,0,255),2)
+        cv2.putText(image2, "sending" + str(cS),(20,300), cv2.FONT_HERSHEY_SIMPLEX, 0.5,(0,0,255),2)
         cv2.imshow('Frame', image2)
                
     cam.release()

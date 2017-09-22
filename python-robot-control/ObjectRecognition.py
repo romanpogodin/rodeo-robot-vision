@@ -78,19 +78,22 @@ def process_frame(cam, min_perimeter, show_picture=True, clear_noise=True):
     # back orange
     oLower = (0, 35, 30)
     oUpper = (30, 255, 255)
-    
+#    [30, 265, 255]
+#    [0, 35, 30]
     # front green
     fLower = (30, 10, 10)
     fUpper = (90, 255, 255)
+#    [90, 100, 255]
+#    [30, 25, 30]
     
     #obstacle color    
-    gLower = (0, 0, 200)
-    gUpper = (180, 95, 255)
+    gLower = (0, 0, 220)
+    gUpper = (180, 20, 255)
 
     #target color
-    bLower = (94, 45, 40)
+    bLower = (94, 45, 45)
     bUpper = (110, 255, 255)
-    
+
     # front
     f_thresh = [fLower, fUpper]   
     # back

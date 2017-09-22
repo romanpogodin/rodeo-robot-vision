@@ -86,8 +86,8 @@ def make_decision2(rodeo_circles, obstacle_circles, target_circles, image):
         rob_len = find_dist(fC, bC)
      # find front and back coordinates of robot
         cv2.line(image, (fC[0], fC[1]), (bC[0], bC[1]), (0, 0, 0), 3)
-            cv2.putText(image, "robot length = " + str(int(rob_len)),(10, 180), \
-                cv2.FONT_HERSHEY_SIMPLEX, 0.5,(0,0,0),2) 
+        cv2.putText(image, "robot length = " + str(int(rob_len)),(10, 180), \
+        cv2.FONT_HERSHEY_SIMPLEX, 0.5,(0,0,0),2) 
     
     # find center coordinates of robot
     mC = find_mid(fC, bC)
@@ -172,16 +172,16 @@ def make_decision2(rodeo_circles, obstacle_circles, target_circles, image):
     cv2.putText(image, "angle to target = " + str(int(ang)),(10, 80), \
             cv2.FONT_HERSHEY_SIMPLEX, 0.5,(0,0,0),2)
 
-    if ob_dist<150:
+    if ob_dist<60:
         ang = 0.2*ang-0.8*obang    
         cv2.putText(image, "alert!! obstacle approaching!",(50, 110), \
             cv2.FONT_HERSHEY_SIMPLEX, 0.7,(0,0,255),2)
-    if ob_dist<50:
+    if ob_dist<20:
         ang = 0.1*ang-0.9*obang    
         cv2.putText(image, "alert!! obstacle approaching!",(50, 110), \
             cv2.FONT_HERSHEY_SIMPLEX, 0.7,(0,0,255),2)
         
-    if tar_dist<100:   
+    if tar_dist<60:   
         cv2.putText(image, "nearly there!!",(50, 140), \
             cv2.FONT_HERSHEY_SIMPLEX, 0.7,(0,255,0),2)
         
