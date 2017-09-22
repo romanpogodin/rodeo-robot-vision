@@ -18,7 +18,7 @@ def send_decision(ser, command):
     
 def run_rodeo(max_time=10000, min_perimeter=15):
     Ser = False
-    Ser2 = True
+    Ser2 = False
     if Ser == True or Ser2 == True:
     # Connect to the transmitter
         cname = '/dev/cu.usbmodem1431' # COM9

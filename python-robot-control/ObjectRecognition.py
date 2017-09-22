@@ -57,17 +57,16 @@ def detect_colored_objects(hsv_img, min_perimeter, clear_noise=True, color='red'
     for i in range(len(cnts)):
         ((x_g, y_g), radius_g) = cv2.minEnclosingCircle(cnts[i])
         circles.append([(int(x_g), int(y_g)), int(radius_g)])
-        
-    
 
     return circles
 #    return cnts
+
 
 def process_frame(cam, min_perimeter, show_picture=True, clear_noise=True):
     import imutils
 
     ret, image = cam.read()    
-#    image = imutils.resize(image, width=600)
+    image = imutils.resize(image, width=600)
     
     if not ret:
         print("Cannot read a frame")
