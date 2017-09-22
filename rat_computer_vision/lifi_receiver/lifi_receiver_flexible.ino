@@ -7,20 +7,25 @@ RF24 radio(2, 3);  // For Arduino Micro
 byte addresses[][6] = {"1Node", "2Node"};
 bool role = 0; // Local state variable that controls whether this node is sending 1 or receiving 0
 
-const int kDelay = 50;
+const int kDelay = 100;
 
 Servo myservoLeft;  // create servo object to control a servo
 Servo myservoRight;  // create servo object to control a servo
+Servo myservoThrash;
+    
 // twelve servo objects can be created on most boards
 
 int leftSpeed = 0;    // variable to store the servo position
 int rightSpeed = 0;
 int go = 0;
 int subtractor = 0;
+int attacktimer = 0;
 
 void setup() {
-  myservoLeft.attach(9);  // attaches the servo on pin 9 to the servo object
-  myservoRight.attach(8);  // attaches the servo on pin 8 to the servo object
+//  myservoLeft.attach(9);  // attaches the servo on pin 9 to the servo object
+//  myservoRight.attach(8);  // attaches the servo on pin 8 to the servo object
+//  myservoThrash.attach(6); // attaches the servo on pin 6 to the servo object
+
   pinMode(12, OUTPUT); // lightsource dectector
   pinMode(10, OUTPUT); // wall detector
   Serial.begin(115200);
@@ -40,16 +45,23 @@ void setup() {
   
   digitalWrite(12, LOW);
   digitalWrite(10, LOW);
+  
 }
+
+byte received_signal;
 
 void loop() {
   /****************** Receiving of Radio Transmission ***************************/
-  byte received_signal = 0;
+  received_signal = 0;
 
   radio.startListening();  // Start the radio listening for data
 //  if (radio.available()) {                // Variable for the received timestamp
    while (!radio.available()) {
     delay(1);
+    attacktimer+=1;
+    if (attacktimer > 2000) {
+    myservoThrash.detach();
+   }
    }
    radio.read(&received_signal, sizeof(byte));  // Get the payload
    Serial.println((received_signal));
@@ -58,9 +70,13 @@ void loop() {
 
   leftSpeed = 180;
   rightSpeed = 0;
-  myservoLeft.attach(9);
-  myservoRight.attach(8);
-
+  myservoLeft.detach();
+  myservoRight.detach();
+  attacktimer += 1;
+  if (attacktimer > 40) {
+    myservoThrash.detach();
+  }
+  
   if (received_signal == 0) {
     myservoLeft.detach();
     myservoRight.detach();
@@ -71,6 +87,8 @@ void loop() {
     Serial.println("STOP");
   } else if ( received_signal == 1) {
     Serial.println("Forward");
+     myservoLeft.attach(9);
+     myservoRight.attach(8);
     leftSpeed = 180;
     rightSpeed = 0;
     digitalWrite(12, LOW);
@@ -79,6 +97,8 @@ void loop() {
     subtractor = 1;
   } else if (received_signal == 2) {
     Serial.println("Backward");
+     myservoLeft.attach(9);
+     myservoRight.attach(8);
     leftSpeed = 0;
     rightSpeed = 180;
     digitalWrite(12, HIGH);
@@ -87,20 +107,54 @@ void loop() {
     subtractor = 2;
   } else if (3 <= received_signal && received_signal < 6) {
     Serial.println("Turn Left");
+     myservoLeft.attach(9);
+     myservoRight.attach(8);
     leftSpeed = 0;
     rightSpeed = 0;
     digitalWrite(12, LOW);
     digitalWrite(10, LOW);
     go = 1;
     subtractor = 3;
-  } else if (6 <= received_signal && received_signal < 10) {
+  } else if (6 <= received_signal && received_signal < 9) {
     Serial.println("Turn Right");
+     myservoLeft.attach(9);
+     myservoRight.attach(8);
     leftSpeed = 180;
     rightSpeed = 180;
     digitalWrite(12, LOW);
     digitalWrite(10, LOW);
     go = 1;
     subtractor = 6;
+  } else if (received_signal == 9) {
+    Serial.println("Attack!"); //attack protocol
+    attacktimer = 0;
+    for (int i=1; i <= 2; i++){
+    myservoThrash.attach(6);
+    myservoLeft.attach(9);
+    myservoRight.attach(8);
+    leftSpeed = 180;
+    rightSpeed = 0;
+    myservoLeft.write(leftSpeed);
+    myservoRight.write(rightSpeed);
+    delay(800 - i*150);
+    leftSpeed = 0;
+    rightSpeed = 180;
+    myservoLeft.write(leftSpeed);
+    myservoRight.write(rightSpeed);
+    delay(500 - i*100);
+    leftSpeed = 0;
+    rightSpeed = 0;
+    myservoLeft.write(leftSpeed);
+    myservoRight.write(rightSpeed);
+    delay(200);
+    rightSpeed = 180;
+    myservoLeft.write(leftSpeed);
+    myservoRight.write(rightSpeed);
+    delay(200);
+    myservoLeft.detach();
+    myservoRight.detach();
+    go = 1;
+    }
   } else {
     Serial.println("No Signal Received");
   }
@@ -112,3 +166,4 @@ void loop() {
 
   delay(kDelay + (received_signal - subtractor) * 50);
 }
+
