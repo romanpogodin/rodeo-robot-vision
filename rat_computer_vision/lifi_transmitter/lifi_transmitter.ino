@@ -52,16 +52,22 @@ void setup() {
   else {
     Serial.println("sent");
   }
+  pinMode(10, OUTPUT); // wall detector
+  pinMode(5, OUTPUT); // wall detector
 
 }
 
   byte transmitted_signal = 0;
   byte old_signal = 0;
   int start = 1;
+  int failcounter = 0;
 
-
+  
 void loop() {
-    delay(300);
+    radio.stopListening();
+    delay(500);
+    digitalWrite(10, LOW);
+    digitalWrite(5, LOW);
   /****************** Transmitting Role ***************************/
   // First, stop listening so we can talk.
   
@@ -76,18 +82,27 @@ void loop() {
     Serial.println("skip");
     return;
   }  else {
-  radio.stopListening();
+
   Serial.println(F("Now sending"));
   if (!radio.write(&transmitted_signal, sizeof(byte))) {
     Serial.println("failed");
-    delay(300);
+    digitalWrite(5, HIGH);
+    if (failcounter > 10) {
+      transmitted_signal = 0;
+      failcounter = 0;
+      radio.write(&transmitted_signal, sizeof(byte));
+      delay(2000);
+    }
+    delay(500);
+    failcounter += 1;    
   } else {
     Serial.println("sent");
     old_signal = transmitted_signal;
+    digitalWrite(10, HIGH);
+    failcounter = 0;
   }
   start = 0;
   }
-
   
   // Try again 100 ms later
 }
