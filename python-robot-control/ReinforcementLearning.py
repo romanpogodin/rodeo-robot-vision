@@ -1,7 +1,7 @@
 """
 Reinforcement learning for robot control
 Heavy use of this code:
-https://github.com/harvitronix/reinforcement-learning-car/blob
+https://github.com/harvitronix/reinforcement-learning-car/
 """
 from keras.models import Sequential
 from keras.layers.core import Dense, Activation, Dropout
